@@ -1,1 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sty's Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #ffffff;
+        }
 
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .active-tab { 
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff; 
+        }
+        
+        .filter-btn.active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        input, select {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+
+        .progress-bar {
+            background: #ffffff;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <h1 class="text-3xl font-bold tracking-tight text-white">
+                Sty's mental breakdown playground
+            </h1>
+            
+            <nav class="glass flex p-1 gap-1">
+                <button onclick="switchTab('restaurants')" id="btn-restaurants" class="px-6 py-2 rounded-lg transition-all active-tab flex items-center gap-2 text-sm font-medium">
+                    <i data-lucide="utensils" class="w-4 h-4"></i> Canteens
+                </button>
+                <button onclick="switchTab('wealth')" id="btn-wealth" class="px-6 py-2 rounded-lg transition-all text-zinc-400 hover:text-white flex items-center gap-2 text-sm font-medium">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> Wealth
+                </button>
+            </nav>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- SECTION 1: RESTAURANT TRACKER -->
+            <div id="section-restaurants" class="space-y-6">
+                <div class="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white flex items-center justify-center rounded-2xl">
+                            <i data-lucide="utensils" class="text-black w-6 h-6"></i>
+                        </div>
+                        <div class="space-y-0.5">
+                            <h2 class="text-xl font-bold uppercase tracking-wider">Campus Canteens</h2>
+                            <p class="text-xs text-zinc-500 font-mono" id="currentTimeDisplay"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="flex glass p-1 gap-1">
+                            <button onclick="setStatusFilter('all')" id="filter-all" class="filter-btn active px-4 py-1.5 rounded-md text-xs transition-all">All</button>
+                            <button onclick="setStatusFilter('open')" id="filter-open" class="filter-btn px-4 py-1.5 rounded-md text-xs transition-all">Open</button>
+                            <button onclick="setStatusFilter('closed')" id="filter-closed" class="filter-btn px-4 py-1.5 rounded-md text-xs transition-all">Closed</button>
+                        </div>
+                        <div class="relative flex-1 md:w-80">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
+                            <input type="text" id="restaurantSearch" oninput="applyFilters()" 
+                                placeholder="Search dishes or locations..." 
+                                class="w-full rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="restaurantGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 2: WEALTH TRACKER -->
+            <div id="section-wealth" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    <!-- Left Column: Summary & Add -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="glass p-6 border-white/10">
+                            <h3 class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Total Assets</h3>
+                            <div class="text-4xl font-bold mb-6" id="totalWealth">$0.00</div>
+                            <div class="flex gap-3">
+                                <button onclick="openModal('expense')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-xl text-xs font-bold transition-colors border border-white/5">
+                                    - Expense
+                                </button>
+                                <button onclick="openModal('income')" class="flex-1 bg-white hover:bg-zinc-200 text-black py-2.5 rounded-xl text-xs font-bold transition-colors">
+                                    + Income
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Savings Goals -->
+                        <div class="glass p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-sm uppercase tracking-widest">Savings Goals</h3>
+                                <button onclick="openGoalModal()" class="text-xs bg-white/10 hover:bg-white/20 p-1.5 rounded-md transition-all">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div id="goalsContainer" class="space-y-6">
+                                <!-- Goals via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Lists -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Expense List -->
+                            <div class="glass p-6">
+                                <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2 text-zinc-400">
+                                    <i data-lucide="arrow-down-right" class="w-4 h-4"></i> Outflow
+                                </h3>
+                                <div id="expenseList" class="space-y-2"></div>
+                            </div>
+
+                            <!-- Income List -->
+                            <div class="glass p-6">
+                                <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2 text-zinc-400">
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4"></i> Inflow
+                                </h3>
+                                <div id="incomeList" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Transactions -->
+    <div id="transactionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass max-w-sm w-full p-8 relative border-white/20">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 id="modalTitle" class="text-xl font-bold mb-6">Record</h2>
+            <form id="txForm" class="space-y-4">
+                <input type="text" id="txTitle" placeholder="Title" required class="w-full rounded-xl px-4 py-3 focus:outline-none">
+                <input type="number" id="txAmount" placeholder="Amount ($)" required class="w-full rounded-xl px-4 py-3 focus:outline-none">
+                <div class="flex gap-2">
+                    <select id="txCategory" class="flex-1 rounded-xl px-4 py-3 focus:outline-none">
+                        <!-- Options via JS -->
+                    </select>
+                    <button type="button" onclick="addCustomCategory()" class="bg-white/10 px-3 rounded-xl hover:bg-white/20 transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <button type="submit" class="w-full bg-white text-black py-3 rounded-xl font-bold mt-4 hover:bg-zinc-200 transition-all">
+                    Confirm Entry
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Goals -->
+    <div id="goalModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass max-w-sm w-full p-8 relative border-white/20">
+            <button onclick="closeGoalModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-6">New Saving Goal</h2>
+            <form id="goalForm" class="space-y-4">
+                <input type="text" id="goalTitle" placeholder="Goal Name (e.g. New Camera)" required class="w-full rounded-xl px-4 py-3 focus:outline-none">
+                <input type="number" id="goalTarget" placeholder="Target Amount ($)" required class="w-full rounded-xl px-4 py-3 focus:outline-none">
+                <button type="submit" class="w-full bg-white text-black py-3 rounded-xl font-bold mt-4 hover:bg-zinc-200 transition-all">
+                    Create Goal
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Funding Goals -->
+    <div id="fundModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass max-w-sm w-full p-8 relative border-white/20">
+            <button onclick="closeFundModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-4">Add Funds</h2>
+            <p id="fundGoalName" class="text-sm text-zinc-400 mb-6 font-mono"></p>
+            <form id="fundForm" class="space-y-4">
+                <input type="number" id="fundAmount" placeholder="Amount to add ($)" required class="w-full rounded-xl px-4 py-3 focus:outline-none">
+                <button type="submit" class="w-full bg-white text-black py-3 rounded-xl font-bold hover:bg-zinc-200 transition-all">
+                    Transfer from Balance
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const restaurants = [
+            { name: "Chung Chi College Staff Club", hours: { open: 1100, close: 2130 }, hoursRaw: "11:00 - 21:30", menu: ["Premium Chinese", "Dim Sum"], location: "G/F, Pentecostal Mission Hall Complex (High Block)" },
+            { name: "Chung Chi College Student Canteen (CC Can)", hours: { open: 730, close: 2100 }, hoursRaw: "07:30 - 21:00", menu: ["Siu Mei", "Rice Noodles", "Cart Noodles"], location: "G/F, Chung Chi Tang" },
+            { name: "Orchid Lodge (蘭苑)", hours: { open: 730, close: 2000 }, hoursRaw: "07:30 - 20:00", menu: ["French Toast", "Sandwiches", "Pasta"], location: "Next to Ho Tim Bldg" },
+            { name: "New Asia College Student Canteen (NA Can)", hours: { open: 800, close: 2000 }, hoursRaw: "08:00 - 20:00", menu: ["Red Bean Ice", "Instant Noodles", "Siu Mei"], location: "G/F, Leung Hung Kee Bldg" },
+            { name: "United College canteen (UC Can)", hours: { open: 730, close: 2000 }, hoursRaw: "07:30 - 20:00", menu: ["Siu Mei", "Chinese Dishes", "Breakfast"], location: "G/F, T.C. Cheng Bldg" },
+            { name: "United College Staff Canteen", hours: { open: 1100, close: 1430 }, hoursRaw: "11:00 - 14:30", menu: ["Set Meals", "Stir-fry"], location: "G/F, T.C. Cheng Bldg" },
+            { name: "Shaw College Student Canteen (Shaw Can)", hours: { open: 730, close: 2030 }, hoursRaw: "07:30 - 20:30", menu: ["Fried Rice", "Hot Pot", "Burgers"], location: "G/F, Kuo Mou Hall" },
+            { name: "Li Wai Chun Canteen (富珍堂)", hours: { open: 730, close: 2000 }, hoursRaw: "07:30 - 20:00", menu: ["Tea & Coffee", "Quick Meals"], location: "G/F, Li Wai Chun Bldg" },
+            { name: "Ho Sin Hang Hall Canteen (善衡 Can)", hours: { open: 730, close: 2000 }, hoursRaw: "07:30 - 20:00", menu: ["Chinese Meals"], location: "G/F, S.H. Ho College" },
+            { name: "Morningside College Canteen", hours: { open: 730, close: 2100 }, hoursRaw: "07:30 - 21:00", menu: ["Salad", "Pasta", "Sandwiches"], location: "Maurice R. Greenberg Bldg" },
+            { name: "S.H. Ho College Canteen", hours: { open: 730, close: 2000 }, hoursRaw: "07:30 - 20:00", menu: ["International Buffet", "Breakfast"], location: "Chan Chun Ha Hall" },
+            { name: "C.W. Chu College Canteen", hours: { open: 730, close: 2030 }, hoursRaw: "07:30 - 20:30", menu: ["Home-style Cooking"], location: "G/F, C.W. Chu College" },
+            { name: "Wu Yeen Sun College Canteen (宜孫 Can)", hours: { open: 730, close: 2030 }, hoursRaw: "07:30 - 20:30", menu: ["Japanese", "Korean", "Healthy Bowls"], location: "G/F, Wu Yee Sun College" },
+            { name: "The Stage", hours: { open: 800, close: 1800 }, hoursRaw: "08:00 - 18:00", menu: ["Western", "Bakery"], location: "Cheng Yu Tung Building 3/F" },
+            { name: "Paper & Coffee (龐 Can)", hours: { open: 1030, close: 1800 }, hoursRaw: "10:30 - 18:00", menu: ["Coffee", "Japanese Curry"], location: "2/F, Pommerenke Student Centre" },
+            { name: "Ebneezer's Kebab (清真 Can)", hours: { open: 1000, close: 2000 }, hoursRaw: "10:00 - 20:00", menu: ["Kebabs", "Pizza", "Salad"], location: "Li Wai Chun Bldg" },
+            { name: "女工", hours: { open: 800, close: 130 }, hoursRaw: "Mon-Fri: 08:00-01:30 | Sat/Non-Sch: 08:00-22:30", menu: ["Late Night Snacks", "Siu Mai", "Fishballs"], location: "" }
+        ];
+
+        let state = {
+            wealth: 0.00,
+            statusFilter: 'all',
+            transactions: [],
+            goals: [],
+            categories: ['Food', 'Transport', 'Academic', 'Leisure', 'Salary'],
+            currentModalType: 'expense',
+            fundingGoalId: null
+        };
+
+        // --- UTILS ---
+        function isCanteenOpen(res) {
+            const now = new Date();
+            const time = now.getHours() * 100 + now.getMinutes();
+            const day = now.getDay();
+
+            // Special logic for 女工 (Women Workers)
+            if (res.name === "女工") {
+                if (day === 0) return false; // Sunday Closed
+                
+                let openingTime = 800;
+                let closingTime = (day >= 1 && day <= 5) ? 130 : 2230; // 01:30 AM or 10:30 PM
+                
+                // Handle late night spanning past midnight
+                if (closingTime < openingTime) {
+                    return time >= openingTime || time <= closingTime;
+                }
+                return time >= openingTime && time <= closingTime;
+            }
+
+            return time >= res.hours.open && time <= res.hours.close;
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tab) {
+            document.getElementById('section-restaurants').classList.toggle('hidden', tab !== 'restaurants');
+            document.getElementById('section-wealth').classList.toggle('hidden', tab !== 'wealth');
+            
+            document.getElementById('btn-restaurants').className = tab === 'restaurants' ? 'px-6 py-2 rounded-lg transition-all active-tab flex items-center gap-2 text-sm font-medium' : 'px-6 py-2 rounded-lg transition-all text-zinc-400 hover:text-zinc-200 flex items-center gap-2 text-sm font-medium';
+            document.getElementById('btn-wealth').className = tab === 'wealth' ? 'px-6 py-2 rounded-lg transition-all active-tab flex items-center gap-2 text-sm font-medium' : 'px-6 py-2 rounded-lg transition-all text-zinc-400 hover:text-zinc-200 flex items-center gap-2 text-sm font-medium';
+            
+            if (tab === 'restaurants') applyFilters();
+        }
+
+        // --- CANTEEN LOGIC ---
+        function applyFilters() {
+            const query = document.getElementById('restaurantSearch').value.toLowerCase();
+            const filtered = restaurants.filter(res => {
+                const matchesSearch = res.name.toLowerCase().includes(query) || res.menu.some(m => m.toLowerCase().includes(query));
+                const open = isCanteenOpen(res);
+                const matchesStatus = state.statusFilter === 'all' || (state.statusFilter === 'open' && open) || (state.statusFilter === 'closed' && !open);
+                return matchesSearch && matchesStatus;
+            });
+            renderRestaurants(filtered);
+        }
+
+        function setStatusFilter(status) {
+            state.statusFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${status}`).classList.add('active');
+            applyFilters();
+        }
+
+        function renderRestaurants(data) {
+            const grid = document.getElementById('restaurantGrid');
+            const now = new Date();
+            document.getElementById('currentTimeDisplay').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+
+            grid.innerHTML = data.map(res => {
+                const open = isCanteenOpen(res);
+                const showLocation = res.location && res.location.trim() !== "";
+                return `
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border border-white/5">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-base leading-snug w-3/4">${res.name}</h3>
+                            <span class="w-2 h-2 rounded-full ${open ? 'bg-white' : 'bg-zinc-700'} shadow-[0_0_8px_rgba(255,255,255,0.4)]"></span>
+                        </div>
+                        <div class="space-y-2 mb-6">
+                            <div class="flex items-center gap-2 text-xs text-zinc-400">
+                                <i data-lucide="clock" class="w-3 h-3"></i> ${res.hoursRaw}
+                            </div>
+                            ${showLocation ? `
+                            <div class="flex items-center gap-2 text-xs text-zinc-400">
+                                <i data-lucide="map-pin" class="w-3 h-3"></i> ${res.location}
+                            </div>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${res.menu.map(item => `<span class="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-zinc-300 font-mono">${item}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        // --- WEALTH LOGIC ---
+        function renderWealth() {
+            document.getElementById('totalWealth').textContent = `$${state.wealth.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            
+            // Transaction Lists
+            const expenses = state.transactions.filter(t => t.type === 'expense').sort((a,b) => b.id - a.id).slice(0, 10);
+            const incomes = state.transactions.filter(t => t.type === 'income').sort((a,b) => b.id - a.id).slice(0, 10);
+
+            const renderItem = (t) => `
+                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
+                    <div class="flex items-center gap-3">
+                        <div class="text-xs font-mono text-zinc-500">${new Date(t.date).getHours()}:${new Date(t.date).getMinutes().toString().padStart(2, '0')}</div>
+                        <div>
+                            <p class="text-sm font-semibold">${t.title}</p>
+                            <p class="text-[10px] text-zinc-500 uppercase tracking-tighter">${t.category}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold ${t.type === 'expense' ? 'text-zinc-400' : 'text-white'}">
+                            ${t.type === 'expense' ? '-' : '+'}$${t.amount.toFixed(1)}
+                        </span>
+                        <button onclick="deleteTx(${t.id})" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-600 hover:text-white">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('expenseList').innerHTML = expenses.map(renderItem).join('');
+            document.getElementById('incomeList').innerHTML = incomes.map(renderItem).join('');
+
+            // Goals
+            const goalsContainer = document.getElementById('goalsContainer');
+            if (state.goals.length === 0) {
+                goalsContainer.innerHTML = `<p class="text-center text-xs text-zinc-600 py-4">No active goals. Stay focused.</p>`;
+            } else {
+                goalsContainer.innerHTML = state.goals.map(g => {
+                    const percent = Math.min((g.current / g.target) * 100, 100);
+                    return `
+                    <div class="space-y-2 group">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h4 class="text-sm font-bold">${g.title}</h4>
+                                <p class="text-[10px] text-zinc-500 font-mono">$${g.current.toLocaleString()} / $${g.target.toLocaleString()}</p>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="openFundModal(${g.id})" class="text-[10px] uppercase font-bold border border-white/20 px-2 py-1 rounded bg-white/5 hover:bg-white/10">Add Funds</button>
+                                <button onclick="deleteGoal(${g.id})" class="text-zinc-600 hover:text-white"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                            </div>
+                        </div>
+                        <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div class="progress-bar h-full" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+
+            // Categories
+            document.getElementById('txCategory').innerHTML = state.categories.map(c => `<option value="${c}" class="bg-black">${c}</option>`).join('');
+            lucide.createIcons();
+        }
+
+        // --- ACTIONS ---
+        function openModal(type) {
+            state.currentModalType = type;
+            document.getElementById('modalTitle').textContent = type === 'income' ? 'Record Income' : 'Record Expense';
+            document.getElementById('transactionModal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('transactionModal').classList.add('hidden'); }
+
+        function openGoalModal() { document.getElementById('goalModal').classList.remove('hidden'); }
+        function closeGoalModal() { document.getElementById('goalModal').classList.add('hidden'); }
+
+        function openFundModal(id) {
+            state.fundingGoalId = id;
+            const goal = state.goals.find(g => g.id === id);
+            document.getElementById('fundGoalName').textContent = `Target: ${goal.title}`;
+            document.getElementById('fundModal').classList.remove('hidden');
+        }
+        function closeFundModal() { document.getElementById('fundModal').classList.add('hidden'); }
+
+        document.getElementById('txForm').onsubmit = (e) => {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            state.transactions.push({
+                id: Date.now(),
+                type: state.currentModalType,
+                title: document.getElementById('txTitle').value,
+                amount: amount,
+                category: document.getElementById('txCategory').value,
+                date: new Date()
+            });
+            state.wealth += (state.currentModalType === 'income' ? amount : -amount);
+            renderWealth(); closeModal(); e.target.reset();
+        };
+
+        document.getElementById('goalForm').onsubmit = (e) => {
+            e.preventDefault();
+            state.goals.push({
+                id: Date.now(),
+                title: document.getElementById('goalTitle').value,
+                target: parseFloat(document.getElementById('goalTarget').value),
+                current: 0
+            });
+            renderWealth(); closeGoalModal(); e.target.reset();
+        };
+
+        document.getElementById('fundForm').onsubmit = (e) => {
+            e.preventDefault();
+            const amt = parseFloat(document.getElementById('fundAmount').value);
+            if (amt > state.wealth) {
+                alert("Insufficient funds in balance!");
+                return;
+            }
+            const goal = state.goals.find(g => g.id === state.fundingGoalId);
+            if (goal) {
+                goal.current += amt;
+                state.wealth -= amt;
+                state.transactions.push({
+                    id: Date.now(),
+                    type: 'expense',
+                    title: `Fund: ${goal.title}`,
+                    amount: amt,
+                    category: 'Savings',
+                    date: new Date()
+                });
+            }
+            renderWealth(); closeFundModal(); e.target.reset();
+        };
+
+        function deleteTx(id) {
+            const tx = state.transactions.find(t => t.id === id);
+            if (tx) {
+                state.wealth -= (tx.type === 'income' ? tx.amount : -tx.amount);
+                state.transactions = state.transactions.filter(t => t.id !== id);
+                renderWealth();
+            }
+        }
+
+        function deleteGoal(id) {
+            state.goals = state.goals.filter(g => g.id !== id);
+            renderWealth();
+        }
+
+        function addCustomCategory() {
+            const name = prompt("New category name:");
+            if (name && !state.categories.includes(name)) {
+                state.categories.push(name);
+                renderWealth();
+            }
+        }
+
+        window.onload = () => {
+            applyFilters();
+            renderWealth();
+            setInterval(() => {
+                if(!document.getElementById('section-restaurants').classList.contains('hidden')) {
+                    const now = new Date();
+                    document.getElementById('currentTimeDisplay').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+                }
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
